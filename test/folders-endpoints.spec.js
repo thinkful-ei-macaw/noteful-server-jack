@@ -75,4 +75,27 @@ describe('Folders endpoints', () => {
         .expect(400);
     });
   });
+
+  describe('DELETE /api/folder/folder_id', () => {
+    context(`Given there are folders in the db`, () => {
+      const testFolders = makeFoldersArray();
+      beforeEach('insert folders', () =>
+        db.into('folders').insert(testFolders)
+      );
+
+      it('deletes a folder when the provided id is valid', () => {
+        const folderId = 2;
+        return supertest(app).delete(`/api/folders/${folderId}`).expect(204);
+      });
+    });
+
+    context(`Given there are no folders in the db`, () => {
+      it('sends back a 404 error when folder id cannot be found', () => {
+        const invalidFolderId = 123456789;
+        return supertest(app)
+          .delete(`/api/folders/${invalidFolderId}`)
+          .expect(404);
+      });
+    });
+  });
 });
