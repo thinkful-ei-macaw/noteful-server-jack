@@ -31,7 +31,7 @@ describe.only('notes endpoints', () => {
       });
     });
 
-    context(`Given there are notes in the db`, () => {
+    context(`Given there are notes and folders in the db`, () => {
       const testNotes = makeNotesArray();
       const testFolders = makeFoldersArray();
 
@@ -141,6 +141,56 @@ describe.only('notes endpoints', () => {
           .expect(204)
           .then(res => {
             return supertest(app).get('/api/notes').expect(expectedNotes);
+          });
+      });
+    });
+  });
+
+  describe('PATCH /notes/:note_id', () => {
+    context(`Given no notes in the database`, () => {
+      it('returns a 404 error when note_id does not exist', () => {
+        const invalidId = 123456789;
+        return supertest(app)
+          .patch(`/api/notes/${invalidId}`)
+          .expect(404, {
+            error: {
+              message: `Note doesn't exist`
+            }
+          });
+      });
+    });
+
+    context(`Given there are notes and folders in the database`, () => {
+      const testNotes = makeNotesArray();
+      const testFolders = makeFoldersArray();
+
+      beforeEach('insert folders and notes into table', () => {
+        return db('folders')
+          .insert(testFolders)
+          .then(() => db('notes').insert(testNotes));
+      });
+
+      it('responds with 204 and updates the note', () => {
+        const targetId = 2;
+        const updatedNote = {
+          name: 'Updated note name via patch',
+          content: 'Updated note content via patch',
+          folder_id: 3
+        };
+
+        const expectedNote = {
+          ...testNotes[targetId - 1],
+          ...updatedNote
+        };
+
+        return supertest(app)
+          .patch(`/api/notes/${targetId}`)
+          .send(updatedNote)
+          .expect(204)
+          .then(res => {
+            return supertest(app)
+              .get(`/api/notes/${targetId}`)
+              .expect(expectedNote);
           });
       });
     });
