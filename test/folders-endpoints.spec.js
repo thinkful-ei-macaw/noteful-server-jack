@@ -76,7 +76,7 @@ describe('Folders endpoints', () => {
     });
   });
 
-  describe('DELETE /api/folder/folder_id', () => {
+  describe('DELETE /api/folder/:folder_id', () => {
     context(`Given there are folders in the db`, () => {
       const testFolders = makeFoldersArray();
       beforeEach('insert folders', () =>
@@ -95,6 +95,50 @@ describe('Folders endpoints', () => {
         return supertest(app)
           .delete(`/api/folders/${invalidFolderId}`)
           .expect(404);
+      });
+    });
+  });
+
+  describe('PATCH /api/folder/:folder_id', () => {
+    context(`Given no folders in the db`, () => {
+      it('returns a 404 error when folder_id does not exist', () => {
+        const invalidFolderId = 123456789;
+        return supertest(app)
+          .patch(`/api/folders/${invalidFolderId}`)
+          .expect(404, {
+            error: {
+              message: `Folder doesn't exist`
+            }
+          });
+      });
+    });
+
+    context(`Given there are folders in the db`, () => {
+      const testFolders = makeFoldersArray();
+      beforeEach('insert folders', () =>
+        db.into('folders').insert(testFolders)
+      );
+
+      it('responds with 204 and upadtes the folder', () => {
+        const targetId = 2;
+        const updatedFolder = {
+          name: 'Folder Update Name 987'
+        };
+
+        const expectedFolder = {
+          ...testFolders[targetId - 1],
+          ...updatedFolder
+        };
+
+        return supertest(app)
+          .patch(`/api/folders/${targetId}`)
+          .send(updatedFolder)
+          .expect(204)
+          .then(res => {
+            return supertest(app)
+              .get(`/api/folders/${targetId}`)
+              .expect(expectedFolder);
+          });
       });
     });
   });

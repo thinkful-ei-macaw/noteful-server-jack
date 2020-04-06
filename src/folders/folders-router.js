@@ -72,6 +72,23 @@ foldersRouter
         res.status(204).end();
       })
       .catch(next);
+  })
+  .patch(jsonParser, (req, res, next) => {
+    const knexInstance = req.app.get('db');
+    const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({
+        error: {
+          message: `Request body must contain 'name'`
+        }
+      });
+    }
+
+    FoldersService.updateFolder(knexInstance, req.params.folder_id, { name })
+      .then(numRowsAffected => {
+        res.status(204).end();
+      })
+      .catch(next);
   });
 
 module.exports = foldersRouter;
