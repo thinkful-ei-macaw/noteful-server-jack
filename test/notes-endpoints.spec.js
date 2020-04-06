@@ -91,5 +91,22 @@ describe.only('notes endpoints', () => {
             .expect(res.body);
         });
     });
+
+    ['name', 'content', 'folder_id'].forEach(field => {
+      it(`should respond with a 400 error if ${field} is missing`, () => {
+        const invalidNote = {
+          ...validNote
+        };
+        delete invalidNote[field];
+        return supertest(app)
+          .post('/api/notes')
+          .send(invalidNote)
+          .expect(400, {
+            error: {
+              message: `Missing ${field} in request body`
+            }
+          });
+      });
+    });
   });
 });
