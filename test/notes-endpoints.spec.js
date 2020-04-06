@@ -59,4 +59,37 @@ describe.only('notes endpoints', () => {
       });
     });
   });
+
+  describe('POST /notes', () => {
+    const testFolders = makeFoldersArray();
+
+    beforeEach('insert folders into table for reference', () => {
+      return db('folders').insert(testFolders);
+    });
+
+    const validNote = {
+      name: 'Test Note',
+      content: 'Test note content',
+      folder_id: 3
+    };
+
+    it('should create a new note when valid info is provided', () => {
+      return supertest(app)
+        .post('/api/notes')
+        .send(validNote)
+        .expect(201)
+        .expect(res => {
+          expect(res.body.name).to.eql(validNote.name);
+          expect(res.body.content).to.eql(validNote.content);
+          expect(res.body.folder_id).to.eql(validNote.folder_id);
+          expect(res.body).to.have.property('id');
+          expect(res.headers.location).to.eql(`/api/notes/${res.body.id}`);
+        })
+        .then(res => {
+          return supertest(app)
+            .get(`/api/notes/${res.body.id}`)
+            .expect(res.body);
+        });
+    });
+  });
 });
