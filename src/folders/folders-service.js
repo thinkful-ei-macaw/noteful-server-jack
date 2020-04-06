@@ -6,8 +6,9 @@ const FoldersService = {
     return knex('folders').select('*').where({ id }).first();
   },
   insertFolder(knex, newFolder) {
-    return knex('folders')
+    return knex
       .insert(newFolder)
+      .into('folders')
       .returning('*')
       .then(rows => rows[0]);
   },

@@ -42,4 +42,37 @@ describe('Folders endpoints', () => {
       });
     });
   });
+
+  describe('POST /api/folders', () => {
+    const validFolder = {
+      name: 'Valid Folder'
+    };
+
+    it('should create a new folder when name is provided', () => {
+      return supertest(app)
+        .post('/api/folders')
+        .send(validFolder)
+        .expect(201)
+        .expect(res => {
+          expect(res.body.name).to.eql(validFolder.name);
+          expect(res.body).to.have.property('id');
+          expect(res.headers.location).to.eql(`/api/folders/${res.body.id}`);
+        })
+        .then(res => {
+          return supertest(app)
+            .get(`/api/folders/${res.body.id}`)
+            .expect(res.body);
+        });
+    });
+
+    it('should send back a 400 error if name is not provided', () => {
+      const invalidFolder = {
+        invalid: 'invalid'
+      };
+      return supertest(app)
+        .post('/api/folders')
+        .send(invalidFolder)
+        .expect(400);
+    });
+  });
 });
